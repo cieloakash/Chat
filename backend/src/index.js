@@ -1,0 +1,31 @@
+import express from "express"
+import dotenv from "dotenv"
+import cookieParser from "cookie-parser"
+import authRoutes from "./routes/auth.routes.js"
+import { connectDb } from "./lib/db.js"
+import messageRoute from "./routes/message.routes.js"
+import cors from "cors"
+import {app,server} from './lib/socketio.js'
+
+// const app =express()
+
+
+dotenv.config()
+
+app.use(express.json())
+app.use(cookieParser())
+app.use(cors({
+    origin:"http://localhost:5173",
+    credentials:true
+}))
+// base route
+app.use("/api/auth",authRoutes)
+app.use("/api/messages", messageRoute);
+const PORT = process.env.PORT
+
+
+server.listen(PORT,()=>{
+    // console.log("running on port 5000");
+    connectDb()
+    
+})
