@@ -3,6 +3,7 @@ import { generateJWToken } from "../lib/utils.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import {body,validationResult} from "express-validator";
+import { otpServices } from "../services/mailer.Services.js";
 
 
 export const signup = async (req, res) => {
@@ -10,7 +11,7 @@ export const signup = async (req, res) => {
   if(!errors.isEmpty()){
     return res.status(400).json({ errors: errors.array() });
   } 
-  const { fullname, password, email } = req.body;
+  const { fullname, password, email,secretkey } = req.body;
   // console.log(fullname, password, email);
 
   try {
@@ -36,14 +37,12 @@ export const signup = async (req, res) => {
         email: newUser.email,
         profilePic: newUser.profilePic,
       });
-      console.error(newUser, "line-41");
     } else {
       res.status(400).json({ message: "Invalid user" });
      
     }
   } catch (error) {
     res.status(500).json({ message: "Internal Server error" });
-    console.error(error);
   }
 };
 
@@ -64,7 +63,6 @@ export const login = async (req, res) => {
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" }); // Add `return` here
     }
-
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
     if (!isPasswordCorrect) {
@@ -80,8 +78,51 @@ export const login = async (req, res) => {
       profilePic: user.profilePic,
     });
   } catch (error) {
-    console.error("Error in login controller:", error.message);
+    // console.error("Error in login controller:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const sendotp= async(req,res)=>{
+    const {email} = req.body
+    if(!email){
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email is required" 
+      });
+    }
+    const result = await otpServices.sendOtp(email)
+    res.status(result.success ? 200 : 400).json(result);
+} 
+
+// controllers/otp.controller.js
+export const verifyOtp = async (req, res) => {
+  try {
+    // 1. Get and sanitize inputs
+    let { email = '', otp = '' } = req.body;
+    email = email.toString().toLowerCase().trim();
+    otp = otp.toString().trim();
+    
+    // 2. Validate inputs
+    if (!email || !otp) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Email and OTP are required'
+      });
+    }
+
+    // 3. Verify OTP
+    const result = await otpServices.verifyOtp(email, otp);
+    
+    // 4. Return appropriate response
+    return res.status(result.success ? 200 : 400).json(result);
+    
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Error verifying OTP',
+      error: error.message
+    });
   }
 };
 
