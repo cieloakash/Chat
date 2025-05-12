@@ -39,8 +39,8 @@ const LoginPage = () => {
             <label className="label">
               <span className="label-text font-medium">Email</span>
             </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div className="relative flex items-center">
+          <div className="absolute inset-y-0  pl-3 flex items-center pointer-events-none  left-0  z-10">
                 <Mail className="h-5 w-5 text-base-content/40" />
               </div>
               <input
@@ -59,8 +59,8 @@ const LoginPage = () => {
             <label className="label">
               <span className="label-text font-medium">Password</span>
             </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div className="relative flex items-center">
+            <div className="absolute inset-y-0  pl-3 flex items-center pointer-events-none  left-0  z-10">
                 <Lock className="h-5 w-5 text-base-content/40" />
               </div>
               <input
@@ -107,6 +107,13 @@ const LoginPage = () => {
             Don&apos;t have an account?{" "}
             <Link to="/signup" className="link link-primary">
               Create account
+            </Link>
+          </p>
+        </div>
+        <div className="text-center">
+          <p className="text-base-content/60">
+            <Link to="/forgot" className="link link-primary">
+              Forgot Password
             </Link>
           </p>
         </div>
