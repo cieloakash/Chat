@@ -11,6 +11,8 @@ import { Loader } from "lucide-react";
 import {Toaster} from "react-hot-toast"
 import { useThemeStore } from "./store/useThemeStore";
 import SettingPage from "./pages/SettingPage";
+import ForgotPass from "./pages/ForgotPass";
+import PageNotFound from "./pages/PageNotFound";
 
 function App() {
   const { checkUrl, authUser, isCheckingAuth } = userAuthStore();
@@ -56,6 +58,15 @@ const {theme} = useThemeStore()
           path="/profile"
           element={authUser ? <ProfilePage /> : <Navigate to="/login" />}
         />
+        <Route
+          path="/forgot"
+          element={ <ForgotPass/>}
+        />
+          <Route
+          path="*"
+          element={ <PageNotFound/>}
+        />
+
       </Routes>
       <Toaster/>
     </div>
