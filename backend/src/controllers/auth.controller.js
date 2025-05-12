@@ -1,21 +1,22 @@
 import cloudinary from "../lib/cloudinary.js";
-import { generateJWToken } from "../lib/utils.js";
+import { generateForgetPasswordToken, generateJWToken } from "../lib/utils.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
-import {body,validationResult} from "express-validator";
+import { body, validationResult } from "express-validator";
 import { otpServices } from "../services/mailer.Services.js";
-
+import PasswordUpdate from "../models/password.model.js";
+import jwt from "jsonwebtoken";
 
 export const signup = async (req, res) => {
   const errors = validationResult(req);
-  if(!errors.isEmpty()){
+  if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
-  } 
-  const { fullname, password, email,secretkey } = req.body;
+  }
+  const { fullname, password, email, secretkey } = req.body;
   // console.log(fullname, password, email);
 
   try {
-  //  form validate
+    //  form validate
     const user = await User.findOne({ email });
     if (user) return res.status(400).json({ message: "email already exist" });
 
@@ -39,7 +40,6 @@ export const signup = async (req, res) => {
       });
     } else {
       res.status(400).json({ message: "Invalid user" });
-     
     }
   } catch (error) {
     res.status(500).json({ message: "Internal Server error" });
@@ -83,45 +83,168 @@ export const login = async (req, res) => {
   }
 };
 
-export const sendotp= async(req,res)=>{
-    const {email} = req.body
-    if(!email){
-      return res.status(400).json({ 
-        success: false, 
-        message: "Email is required" 
+export const sendotp = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
       });
     }
-    const result = await otpServices.sendOtp(email)
+    const checkedemail = await User.findOne({ email });
+
+    if (!checkedemail) {
+      return res.status(404).json({
+        success: false,
+        message: "Email not found ",
+      });
+    }
+    const result = await otpServices.sendOtp(email);
     res.status(result.success ? 200 : 400).json(result);
-} 
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to send OTP",
+      error: error.message,
+    });
+  }
+};
 
 // controllers/otp.controller.js
 export const verifyOtp = async (req, res) => {
+  let { email = "", otp = "" } = req.body;
+  email = email.toString().toLowerCase().trim();
+  otp = otp.toString().trim();
+
+  const user = await User.findOne({ email });
   try {
-    // 1. Get and sanitize inputs
-    let { email = '', otp = '' } = req.body;
-    email = email.toString().toLowerCase().trim();
-    otp = otp.toString().trim();
-    
     // 2. Validate inputs
     if (!email || !otp) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: 'Email and OTP are required'
+        message: "Email and OTP are required",
       });
     }
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Email not registered",
+      });
+    }
+    const result = await otpServices.verifyOtpServices(email, otp);
+    await generateForgetPasswordToken(email, res);
 
-    // 3. Verify OTP
-    const result = await otpServices.verifyOtp(email, otp);
-    
     // 4. Return appropriate response
     return res.status(result.success ? 200 : 400).json(result);
-    
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: 'Error verifying OTP',
-      error: error.message
+      message: "Error verifying OTP",
+      error: error.message,
+    });
+  }
+};
+
+export const updatePassword = async (req, res) => {
+  const { password, confirmPassword } = req.body;
+
+  try {
+    // Validate input presence
+    if (!password || !confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Both password fields are required",
+      });
+    }
+
+    // Validate password match
+    if (password !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Password and confirmation do not match",
+      });
+    }
+
+    // Validate password strength
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters long",
+      });
+    }
+
+    // Verify authentication token
+    const token = req.cookies.passToken;
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Authorization token required",
+      });
+    }
+
+    // Verify and decode token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Find and validate password reset request
+    const passwordUpdate = await PasswordUpdate.findOneAndDelete({
+      key: decoded.id, // Assuming key stores user ID
+    });
+
+    if (!passwordUpdate) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or expired password reset request",
+      });
+    }
+
+    // Find user and update password
+    const user = await User.findOne({ email: passwordUpdate.email }).select(
+      "-password"
+    );
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Hash and update password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
+    await user.save();
+
+    // Clear password reset cookie
+    res.clearCookie("passToken");
+
+    return res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+    });
+  } catch (error) {
+    // Handle specific JWT errors
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        success: false,
+        message: "Password reset session expired",
+      });
+    }
+
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid authorization token",
+      });
+    }
+
+    // Handle other errors
+    // console.error("Password update error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
     });
   }
 };
