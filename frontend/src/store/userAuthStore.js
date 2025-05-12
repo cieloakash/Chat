@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
-import { io } from 'socket.io-client';
+import { io } from "socket.io-client";
 
 const BASE_URL = "http://localhost:5001";
 
@@ -13,9 +13,64 @@ export const userAuthStore = create((set, get) => ({
   isCheckingAuth: true,
   onlineUsers: [],
   socket: null,
+  otpLoading: false,
+  verifyingOtpLoading: false,
+  forgetButton: { otpSend: false, verifyotp: false, password: false },
+  passUpdate: false,
 
+  otpSend: async (data) => {
+    set({ otpLoading: true });
+
+    try {
+      const res = await axiosInstance.post("/auth/send-otp", data);
+      set((state) => ({
+        forgetButton: { ...state.forgetButton, otpSend: true },
+      }));
+
+      if (res.data.success) {
+        toast.success("OTP sent successfully");
+        return { success: true };
+      } else {
+        toast.error(res.data.message || "Failed to send OTP");
+        return { success: false };
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || "Failed to send OTP";
+      toast.error(errorMsg);
+      return { success: false };
+    } finally {
+      set({ otpLoading: false });
+    }
+  },
+
+  verifyOTP: async (data) => {
+    set({ verifyingOtpLoading: true });
+    const { forgetButton } = get();
+    try {
+      const response = await axiosInstance.post("/auth/verify", data);
+      get().connectSocket();
+      toast.success("OTP verified successfully");
+      set((state) => ({
+        forgetButton: { ...state.forgetButton, verifyotp: true },
+      }));
+      return { success: true, data: response.data }; // Return success status
+    } catch (error) {
+      const errorMsg =
+        error.response?.data?.message || "OTP verification failed";
+      toast.error(errorMsg);
+      return { success: false, message: errorMsg }; // Return error info
+    } finally {
+      set({ verifyingOtpLoading: false });
+    }
+  },
+
+  handleforgetButton: () => {
+    set({
+      forgetButton: { otpSend: false, verifyotp: false, password: false },
+    });
+  },
   checkUrl: async () => {
-    set({ isCheckingAuth:true });
+    set({ isCheckingAuth: true });
     try {
       const res = await axiosInstance.get("/auth/check");
       set({ authUser: res.data });
@@ -75,23 +130,39 @@ export const userAuthStore = create((set, get) => ({
       set({ isUpdatingProfile: false });
     }
   },
+  updatePassword: async (data) => {
+    set({ passUpdate: true });
+    try {
+      await axiosInstance.put("/auth/updatepass", data);
+      toast.success("sucessfully updated password");
+      set((state) => ({
+        forgetButton: { ...state.forgetButton, password: true },
+      }));
+    } catch (error) {
+      console.log(error);
+
+      toast.error(error.message);
+    } finally {
+      set({ passUpdate: false });
+    }
+  },
   connectSocket: () => {
     const { authUser } = get();
     if (!authUser || get().socket?.connected) return;
     // baseUrl is backend url
-    const socket = io(BASE_URL,{
-      query:{
-        userId:authUser._id,
-      }
+    const socket = io(BASE_URL, {
+      query: {
+        userId: authUser._id,
+      },
     });
-    
+
     socket.connect();
-    set({socket:socket})
-    socket.on("getOnlineUsers",(userIds)=>{
-      set({onlineUsers:userIds})
-    })
+    set({ socket: socket });
+    socket.on("getOnlineUsers", (userIds) => {
+      set({ onlineUsers: userIds });
+    });
   },
   disconnectSocket: () => {
-    if(get().socket?.connected)get().socket.disconnect()
+    if (get().socket?.connected) get().socket.disconnect();
   },
 }));
