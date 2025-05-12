@@ -1,7 +1,7 @@
 import express from "express"
 import { protectRoute, validateSignup } from "../middleware/auth.middleWare.js";
 
-import { login,signup,logout,updateProfilePic,checkAuth, sendotp,verifyOtp } from "../controllers/auth.controller.js";
+import { login,signup,logout,updateProfilePic,checkAuth, sendotp,verifyOtp,updatePassword } from "../controllers/auth.controller.js";
 
 const authRoutes = express.Router();
 
@@ -12,6 +12,7 @@ authRoutes.post("/login",login)
 authRoutes.post("/logout",logout)
 authRoutes.post("/send-otp",sendotp)
 authRoutes.post("/verify",verifyOtp)
+authRoutes.put("/updatepass",updatePassword)
 
 authRoutes.put('/update',protectRoute,updateProfilePic)
 
