@@ -6,7 +6,7 @@ export const storage = multer.diskStorage({
     },
     filename:(req,file,cb)=>{
         const uniqueFilename = Date.now() + "-" + file.originalname;
-        console.log("Multer is called - Saving file as:", uniqueFilename); 
+        // console.log("Multer is called - Saving file as:", uniqueFilename); 
         cb(null, uniqueFilename);
     }
    

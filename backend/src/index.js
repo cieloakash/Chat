@@ -23,9 +23,8 @@ app.use("/api/auth",authRoutes)
 app.use("/api/messages", messageRoute);
 const PORT = process.env.PORT
 
-
 server.listen(PORT,()=>{
-    // console.log("running on port 5000");
+    // console.log("running on port",PORT);
     connectDb()
     
 })
