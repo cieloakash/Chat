@@ -139,9 +139,7 @@ export const userAuthStore = create((set, get) => ({
         forgetButton: { ...state.forgetButton, password: true },
       }));
     } catch (error) {
-      console.log(error);
-
-      toast.error(error.message);
+      toast.error(error.response.data.message);
     } finally {
       set({ passUpdate: false });
     }

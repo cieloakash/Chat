@@ -1,4 +1,4 @@
-import React, { useEffect,useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useChatStore } from "../store/useChatStore";
 import ChatHeader from "./ChatHeader";
 import MessageInput from "./MessageInput";
@@ -7,25 +7,30 @@ import { userAuthStore } from "../store/userAuthStore";
 import { formatMessageTime } from "../lib/formatTime";
 
 const ChatContainer = () => {
-  const { message, selectedUser, isMessageLoading, getMessages,subscribeToMessage,unsubscribeToMessage } =
-    useChatStore();
-    const {authUser} = userAuthStore()
-    const messageEndRef = useRef(null);
+  const {
+    message,
+    selectedUser,
+    isMessageLoading,
+    getMessages,
+    subscribeToMessage,
+    unsubscribeToMessage,
+  } = useChatStore();
+  const { authUser } = userAuthStore();
+  const messageEndRef = useRef(null);
 
   // get the message of user
   useEffect(() => {
     getMessages(selectedUser._id);
-    subscribeToMessage()
-    return ()=>unsubscribeToMessage()
-  }, [selectedUser._id, getMessages,subscribeToMessage,unsubscribeToMessage]);
-
+    subscribeToMessage();
+    return () => unsubscribeToMessage();
+  }, [selectedUser._id, getMessages, subscribeToMessage, unsubscribeToMessage]);
 
   // scroll automatically with new meassge at end
-  useEffect(()=>{
-    if(messageEndRef.current && message){
-      messageEndRef.current.scrollIntoView({"behavior":"smooth"})
+  useEffect(() => {
+    if (messageEndRef.current && message) {
+      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  },[message])
+  }, [message]);
   if (isMessageLoading) {
     return (
       <div className="flex-1 flex flex-col overflow-auto">
@@ -36,8 +41,6 @@ const ChatContainer = () => {
     );
   }
 
-
-  
   return (
     <div className="flex-1 flex flex-col overflow-auto">
       <ChatHeader />
@@ -45,11 +48,17 @@ const ChatContainer = () => {
         {message.map((m) => (
           <div
             key={m._id}
-            className={`chat ${m.senderID === authUser._id ? "chat-end" : "chat-start"}`}
+            className={`chat ${
+              m.senderID === authUser._id ? "chat-end" : "chat-start"
+            }`}
             ref={messageEndRef}
           >
             <div className=" chat-image avatar">
               <div className="size-10 rounded-full border">
+                {console.log("m.senderId",m.senderID)}
+                {console.log("selectedUser", selectedUser)}
+                {console.log("authUser", authUser)}
+
                 <img
                   src={
                     m.senderID === authUser._id
