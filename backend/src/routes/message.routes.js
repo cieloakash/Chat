@@ -5,9 +5,10 @@ import { getAllMessages, getAllUser,sendMessage } from "../controllers/message.c
 const messageRoute = express.Router()
 
 messageRoute.get('/users',protectRoute,getAllUser)
-messageRoute.get('/:id',protectRoute,getAllMessages)
 
 messageRoute.post("/:id/send",protectRoute,sendMessage)
+messageRoute.get('/:id',protectRoute,getAllMessages)
+
 export default messageRoute
 
 

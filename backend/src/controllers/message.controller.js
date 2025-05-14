@@ -2,7 +2,8 @@ import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
 import cloudinary from "../lib/cloudinary.js";
 import { getReceiverSocketId, io } from "../lib/socketio.js";
-import {upload} from '../middleware/multer.middleware.js'
+import { login } from "./auth.controller.js";
+
 export const getAllUser = async (req, res) => {
   try {
     // 1 get logged in userId
@@ -41,6 +42,8 @@ export const sendMessage = async (req, res) => {
     const { text } = req.body;
     const senderId = req.user._id;
     const { id: receiverId } = req.params;
+    console.log(req.params);
+    
     let imageUrl;
     if (req.file) {
       try {
@@ -49,10 +52,7 @@ export const sendMessage = async (req, res) => {
       } catch (error) {
         return res.status(500).json({ error: "Image upload failed" });
       }
-      // const imageUpload = await cloudinary.uploader.upload(image);
-      // imageUrl = imageUpload.secure_url;
      
-      
     }
     const newMessage = new Message({
       senderID: senderId,
