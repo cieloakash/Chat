@@ -2,7 +2,7 @@ import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
 import cloudinary from "../lib/cloudinary.js";
 import { getReceiverSocketId, io } from "../lib/socketio.js";
-import {upload} from '../middleware/multer.middleware.js'
+
 export const getAllUser = async (req, res) => {
   try {
     // 1 get logged in userId
