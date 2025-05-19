@@ -73,8 +73,8 @@ export const userAuthStore = create((set, get) => ({
     set({ isCheckingAuth: true });
     try {
       const res = await axiosInstance.get("/auth/check");
-      set({ authUser: res.data });
-      get().connectSocket();
+        set({ authUser: res.data });
+        get().connectSocket();
     } catch (error) {
       set({ authUser: null });
     } finally {
@@ -148,15 +148,16 @@ export const userAuthStore = create((set, get) => ({
     const { authUser } = get();
     if (!authUser || get().socket?.connected) return;
     // baseUrl is backend url
-    const socket = io(BASE_URL, {
+    const newSocket = io(BASE_URL, {
       query: {
         userId: authUser._id,
       },
     });
 
-    socket.connect();
-    set({ socket: socket });
-    socket.on("getOnlineUsers", (userIds) => {
+    newSocket.connect();
+    set({ socket: newSocket });
+    
+    newSocket.on("getOnlineUsers", (userIds) => {
       set({ onlineUsers: userIds });
     });
   },
