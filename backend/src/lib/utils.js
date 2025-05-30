@@ -8,13 +8,14 @@ export const generateJWToken=(userId,res)=>{
         expiresIn:"24hr"
     });
 
-    res.cookie("jwtoken",token,{
-        maxAge: 24*60*60*1000, //ms
-        httpOnly:true, // prevent XSS attacks cross-site scripting attacks
-        sameSite: process.env.NODE_ENV === "development" ? "lax" : "none", // Fix for cross-site
-        secure: process.env.NODE_ENV !== "development", // HTTPS-only in production
-        domain: process.env.NODE_ENV === "production" ? ".onrender.com" : undefined,
-    })
+    res.cookie("jwtoken", token, {
+        maxAge: 24 * 60 * 60 * 1000, 
+        httpOnly: true, 
+        sameSite: process.env.NODE_ENV === "development" ? "lax" : "none",
+        secure: true, 
+        domain: process.env.NODE_ENV === "production" ? "chat-backend-s9bl.onrender.com" : undefined,
+        path: "/", 
+    });
 
     return token
 }
