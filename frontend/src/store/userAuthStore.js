@@ -148,16 +148,17 @@ export const userAuthStore = create((set, get) => ({
     const { authUser } = get();
     if (!authUser || get().socket?.connected) return;
     // baseUrl is backend url
-    const newSocket = io(BASE_URL, {
+    const socket = io(BASE_URL, {
       query: {
         userId: authUser._id,
       },
     });
 
-    newSocket.connect();
-    set({ socket: newSocket });
+    socket.connect();
+    set({ socket: socket });
     
-    newSocket.on("getOnlineUsers", (userIds) => {
+    socket.on("getOnlineUsers", (userIds) => {
+      console.log(userIds);
       set({ onlineUsers: userIds });
     });
   },
