@@ -40,12 +40,15 @@ const ChatContainer = () => {
       </div>
     );
   }
+  console.log(message);
+  
 
   return (
     <div className="flex-1 flex flex-col overflow-auto">
       <ChatHeader />
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {message.map((m) => (
+          
           <div
             key={m._id}
             className={`chat ${
@@ -55,9 +58,9 @@ const ChatContainer = () => {
           >
             <div className=" chat-image avatar">
               <div className="size-10 rounded-full border">
-                {console.log("m.senderId",m.senderID)}
+                {/* {console.log("m.senderId",m.senderID)}
                 {console.log("selectedUser", selectedUser)}
-                {console.log("authUser", authUser)}
+                {console.log("authUser", authUser)} */}
 
                 <img
                   src={

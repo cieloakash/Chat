@@ -38,21 +38,17 @@ export const getAllMessages = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text,image } = req.body;
     const senderId = req.user._id;
     const { id: receiverId } = req.params;
     let imageUrl;
-    if (req.file) {
+    if (image) {
       try {
-        const imageUpload = await cloudinary.uploader.upload(req.file.path)
+        const imageUpload = await cloudinary.uploader.upload(image)
         imageUrl = imageUpload.secure_url;
       } catch (error) {
         return res.status(500).json({ error: "Image upload failed" });
       }
-      // const imageUpload = await cloudinary.uploader.upload(image);
-      // imageUrl = imageUpload.secure_url;
-     
-      
     }
     const newMessage = new Message({
       senderID: senderId,
