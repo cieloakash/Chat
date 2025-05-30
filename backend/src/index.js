@@ -11,13 +11,14 @@ import {app,server} from './lib/socketio.js'
 
 
 dotenv.config()
-
-app.use(express.json())
-app.use(cookieParser())
 app.use(cors({
     origin:process.env.FRONTEND_CORS,
     credentials:true
 }))
+
+app.use(express.json())
+app.use(cookieParser())
+
 // base route
 app.use("/api/auth",authRoutes)
 app.use("/api/messages", messageRoute);
