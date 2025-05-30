@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: chat-backend
+    ports:
+      - '${PORT}:${PORT}'  
+    environment:
+      - MONGOOSE_URL=${MONGOOSE_URL}
+      - PORT=${PORT}
+      - JWT_SECRET=${JWT_SECRET}
+      - CLOUD_NAME=${CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_SECRET_KEY=${CLOUDINARY_SECRET_KEY}
+      - MAIL_PASS=${MAIL_PASS}
+      - MAIL_ADDRESS=${MAIL_ADDRESS}
+      - FRONTEND_CORS=${FRONTEND_CORS}
+    volumes:
+      - ./backend:/app
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    container_name: chat-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_BACKEND_CORS=${VITE_BACKEND_CORS}
+      - VITE_BACKEND_CORS_SOCKET=${VITE_BACKEND_CORS_SOCKET}
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
