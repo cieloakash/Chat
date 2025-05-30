@@ -5,6 +5,9 @@ import { body } from "express-validator";
 export const protectRoute = async (req, res, next) => {
   try {
     const token = req.cookies.jwtoken;
+    if (!token && req.headers.authorization?.startsWith("jwtoken ")) {
+      token = req.headers.authorization.split(" ")[1];
+  }
     // getting whether token is present or not ,cookie parse in index.js to parse cookie
     if (!token) {
       return res

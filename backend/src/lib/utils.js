@@ -11,8 +11,9 @@ export const generateJWToken=(userId,res)=>{
     res.cookie("jwtoken",token,{
         maxAge: 24*60*60*1000, //ms
         httpOnly:true, // prevent XSS attacks cross-site scripting attacks
-        sameSite: "strict", // CSRF attacks cross-site request forgery attacks
-        secure:process.env.NODE_ENV !== "development" ,
+        sameSite: process.env.NODE_ENV === "development" ? "lax" : "none", // Fix for cross-site
+        secure: process.env.NODE_ENV !== "development", // HTTPS-only in production
+        domain: process.env.NODE_ENV === "production" ? ".onrender.com" : undefined,
     })
 
     return token
