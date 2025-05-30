@@ -5,29 +5,28 @@ import { Users } from "lucide-react";
 import { userAuthStore } from "../store/userAuthStore";
 
 const Sidebar = () => {
-  const { getUsers, users, selectedUser, isUserLoading, setSelectedUser,
-    socket
-   } =useChatStore();
+  const {
+    getUsers,
+    users,
+    selectedUser,
+    isUserLoading,
+    setSelectedUser,
+    socket,
+  } = useChatStore();
 
-  const {onlineUsers,authUser} = userAuthStore()
-  const [showOnline,setShowOnline] = useState(false)
+  const { onlineUsers, authUser } = userAuthStore();
+  const [showOnline, setShowOnline] = useState(false);
 
   useEffect(() => {
-    if(authUser > 0 && showOnline){
-      getUsers();
-    }
-    
-  }, [getUsers,authUser]);
+    getUsers();
+  }, []);
 
-  const filteredData = showOnline ? users.filter((user)=>onlineUsers.includes(user._id)) :users ;
-  console.log(filteredData);
-  console.log(socket);
-  
-  
+  const filteredData = showOnline
+    ? users.filter((user) => onlineUsers.includes(user._id))
+    : users;
+
   if (isUserLoading) return <SideBarSkeleton />;
 
-  // console.log(getUsers);
-  
   return (
     <aside className="h-full w-20 lg:w-72 border-r border-base-300 flex flex-col transition-all duration-200">
       <div className="border-b border-base-300 w-full p-5">
@@ -35,7 +34,7 @@ const Sidebar = () => {
           <Users className="size-6" />
           <span className="font-medium hidden lg:block">Contacts</span>
         </div>
-      {/* filter */}
+        {/* filter */}
 
         <div className="mt-3 hidden lg:flex items-center gap-2">
           <label className="cursor-pointer flex items-center gap-2">
@@ -47,11 +46,12 @@ const Sidebar = () => {
             />
             <span className="text-sm">Show online only</span>
           </label>
-          <span className="text-xs text-zinc-500">({onlineUsers.length - 1} online)</span>
+          <span className="text-xs text-zinc-500">
+            ({onlineUsers.length - 1} online)
+          </span>
         </div>
       </div>
 
-      
       <div className="overflow-y-auto w-full py-3">
         {filteredData.map((user) => (
           <button
