@@ -152,6 +152,8 @@ export const userAuthStore = create((set, get) => ({
       query: {
         userId: authUser._id,
       },
+      transports: ["websocket"], // ensures real WebSocket usage
+      withCredentials: true,
     });
 
     socket.connect();
