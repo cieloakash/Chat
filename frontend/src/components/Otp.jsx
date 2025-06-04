@@ -67,7 +67,7 @@ const OtpPage = ({ email }) => {
             onKeyDown={(e) => handleKeyDown(e, index)}
              inputMode="numeric"
              style={{ MozAppearance: "textfield" }}
-            className="w-10 h-10 sm:w-14 sm:h-14 text-center text-lg font-semibold border-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-10 h-10 sm:w-14 sm:h-14 text-center text-lg font-semibold border-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
           />
         ))}
       </div>

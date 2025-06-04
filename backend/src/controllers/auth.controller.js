@@ -202,24 +202,24 @@ export const updatePassword = async (req, res) => {
     }
 
     // Verify authentication token
-    // if (!authHeader?.startsWith("Bearer ")) {
-    //   return res
-    //     .status(401)
-    //     .json({ message: "Authorization token required" });
-    // }
-    // const token = authHeader.split(' ')[1];
-    // if (!token) {
-    //   return res.status(401).json({ 
-    //     success: false,
-    //     message: "Malformed authorization token" 
-    //   });
-    // }
-    // if (!token) {
-    //   return res.status(401).json({
-    //     success: false,
-    //     message: "Authorization token required",
-    //   });
-    // }
+    if (!authHeader?.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ message: "Authorization token required" });
+    }
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ 
+        success: false,
+        message: "Malformed authorization token" 
+      });
+    }
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Authorization token required",
+      });
+    }
 
     // Verify and decode token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
