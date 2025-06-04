@@ -1,11 +1,21 @@
-import React, { useState } from "react";
-import { Camera, Mail, User } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Camera, Loader, Mail, User } from "lucide-react";
 import { userAuthStore } from "../store/userAuthStore";
 import avatar from "/avatar.png";
 
+
 const ProfilePage = () => {
+
   const [selectedImg, setSelectedImg] = useState(null);
-  const { isUpdatingProfile, updateProfile, authUser } = userAuthStore();
+  const { isUpdatingProfile, updateProfile,authUser } = userAuthStore();
+
+
+
+useEffect(() => {
+ console.log('effect is printed')
+}, [authUser])
+
+
 
   const handleProfilePic = async (e) => {
     const file = e.target.files[0];
@@ -21,7 +31,13 @@ const ProfilePage = () => {
       await updateProfile({ profilePic: base64Image });
     };
   };
-
+  if (!authUser) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader className="size-10 animate-spin" />
+      </div>
+    );
+  }
   return (
     <div className="h-screen pt-20 overflow-auto">
       <div className="max-w-2xl mx-auto p-4 py-8">
@@ -78,6 +94,7 @@ const ProfilePage = () => {
               </div>
               <p className="px-4 py-2.5 bg-base-200 rounded-lg border">
                 {authUser?.fullname}
+                
               </p>
             </div>
 
@@ -88,6 +105,7 @@ const ProfilePage = () => {
               </div>
               <p className="px-4 py-2.5 bg-base-200 rounded-lg border">
                 {authUser?.email}
+                
               </p>
             </div>
           </div>

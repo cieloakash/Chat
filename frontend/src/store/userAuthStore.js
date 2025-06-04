@@ -3,7 +3,7 @@ import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
-const BASE_URL =import.meta.env.VITE_BACKEND_CORS_SOCKET;
+const BASE_URL = import.meta.env.VITE_BACKEND_CORS_SOCKET;
 
 export const userAuthStore = create((set, get) => ({
   authUser: null,
@@ -17,6 +17,7 @@ export const userAuthStore = create((set, get) => ({
   verifyingOtpLoading: false,
   forgetButton: { otpSend: false, verifyotp: false, password: false },
   passUpdate: false,
+  token: localStorage.getItem("jwtToken") || null,
 
   otpSend: async (data) => {
     set({ otpLoading: true });
@@ -48,6 +49,8 @@ export const userAuthStore = create((set, get) => ({
     const { forgetButton } = get();
     try {
       const response = await axiosInstance.post("/auth/verify", data);
+      localStorage.setItem("passToken", response.data.token);
+
       get().connectSocket();
       toast.success("OTP verified successfully");
       set((state) => ({
@@ -72,11 +75,28 @@ export const userAuthStore = create((set, get) => ({
   checkUrl: async () => {
     set({ isCheckingAuth: true });
     try {
-      const res = await axiosInstance.get("/auth/check");
-        set({ authUser: res.data });
-        get().connectSocket();
+      const token = localStorage.getItem("jwtToken");
+      if (!token) {
+        set({ authUser: null });
+        return;
+      }
+      const res = await axiosInstance.get("/auth/check", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      set(()=>({ authUser: res.data, token }));
+      console.log("authuser from store",get().authUser)
+
+      get().connectSocket();
     } catch (error) {
-      set({ authUser: null });
+      console.log(error);
+      
+      localStorage.removeItem("jwtToken");
+      set({
+        authUser: null,
+        token: null,
+      });
     } finally {
       set({ isCheckingAuth: false });
     }
@@ -86,10 +106,14 @@ export const userAuthStore = create((set, get) => ({
     set({ isSigningUp: true });
     try {
       const res = await axiosInstance.post("/auth/signup", data);
-      set({ authUser: res.data });
+      localStorage.setItem("jwtToken", res.data.token);
+      set({ authUser: res.data, token: res.data.token });
+
       toast.success("Account created sucessfully");
     } catch (error) {
-      toast.error(error.response.data.errors[0].msg);
+      toast.error(
+        error.response.data.errors[0].msg || "Signup Failed. Please try again."
+      );
     } finally {
       set({ isSigningUp: false });
     }
@@ -98,10 +122,14 @@ export const userAuthStore = create((set, get) => ({
     set({ isLoggingIn: true });
     try {
       const res = await axiosInstance.post("/auth/login", data);
-      set({ authUser: res.data });
-      toast.success("Logged in sucessfully");
+      localStorage.setItem("jwtToken", res.data.token);
+      set({ authUser: res.data, token: res.data.token });
+
       get().connectSocket();
+      toast.success("Logged in sucessfully");
     } catch (error) {
+      console.log(error);
+      
       toast.error(error.response.data.message);
     } finally {
       set({ isLoggingIn: false });
@@ -109,10 +137,15 @@ export const userAuthStore = create((set, get) => ({
   },
   logout: async () => {
     try {
-      await axiosInstance.post("/auth/logout");
-      set({ authUser: null });
-      toast.success("Logged out sucessfully");
+      await axiosInstance.post("/auth/logout", null, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
+        },
+      });
+      localStorage.removeItem("jwtToken");
+      set({ authUser: null, token: null });
       get().disconnectSocket();
+      toast.success("Logged out sucessfully");
     } catch (error) {
       toast.error("something went wrong");
     }
@@ -133,11 +166,18 @@ export const userAuthStore = create((set, get) => ({
   updatePassword: async (data) => {
     set({ passUpdate: true });
     try {
-      await axiosInstance.put("/auth/updatepass", data);
+      const token = localStorage.getItem("passToken");
+      const response = await axiosInstance.put("/auth/updatepass", data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       toast.success("sucessfully updated password");
       set((state) => ({
         forgetButton: { ...state.forgetButton, password: true },
       }));
+      localStorage.removeItem("passToken");
+      return { success: true };
     } catch (error) {
       toast.error(error.response.data.message);
     } finally {
@@ -158,7 +198,7 @@ export const userAuthStore = create((set, get) => ({
 
     socket.connect();
     set({ socket: socket });
-    
+
     socket.on("getOnlineUsers", (userIds) => {
       // console.log(userIds);
       set({ onlineUsers: userIds });

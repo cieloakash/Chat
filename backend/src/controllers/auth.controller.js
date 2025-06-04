@@ -30,13 +30,16 @@ export const signup = async (req, res) => {
     });
 
     if (newUser) {
-      generateJWToken(newUser._id, res);
+      const token = generateJWToken(newUser._id, res);
       await newUser.save();
       res.status(201).json({
-        _id: newUser._id,
+        token,
+        user:{
+          _id: newUser._id,
         fullname: newUser.fullname,
         email: newUser.email,
         profilePic: newUser.profilePic,
+        }
       });
     } else {
       res.status(400).json({ message: "Invalid user" });
@@ -48,7 +51,15 @@ export const signup = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
-    res.cookie("jwtoken", "", { maxAge: 0 });
+   
+    const token = req.headers.authorization?.split(' ')[1]
+    if(token){
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      } catch (error) {
+        res.status(500).json({error:error.message})
+      }
+    }
     res.status(200).json({ message: "logout sucessfully" });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
@@ -69,13 +80,14 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" }); //  Add `return` here
     }
 
-    generateJWToken(user._id, res);
+    const token = generateJWToken(user._id, res);
 
     return res.status(200).json({
-      _id: user._id,
+      token,
+     user:{ _id: user._id,
       fullname: user.fullname,
       email: user.email,
-      profilePic: user.profilePic,
+      profilePic: user.profilePic,}
     });
   } catch (error) {
     // console.error("Error in login controller:", error.message);
@@ -113,13 +125,11 @@ export const sendotp = async (req, res) => {
   }
 };
 
-// controllers/otp.controller.js
 export const verifyOtp = async (req, res) => {
   let { email = "", otp = "" } = req.body;
   email = email.toString().toLowerCase().trim();
   otp = otp.toString().trim();
 
-  const user = await User.findOne({ email });
   try {
     // 2. Validate inputs
     if (!email || !otp) {
@@ -128,16 +138,31 @@ export const verifyOtp = async (req, res) => {
         message: "Email and OTP are required",
       });
     }
+  const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({
         success: false,
         message: "Email not registered",
       });
     }
-    const result = await otpServices.verifyOtpServices(email, otp);
-    await generateForgetPasswordToken(email, res);
+    
+    
     // 4. Return appropriate response
-    return res.status(result.success ? 200 : 400).json(result);
+ 
+      const result = await otpServices.verifyOtpServices(email, otp);
+      if(!result.success){
+        return res.status(400).json(result);
+      }
+      const token = await generateForgetPasswordToken(email);
+      console.log("verify",token);
+      
+    return res.status(200 ).json({
+      success:true,
+      message:'otp veerified sucessfully',
+      token,
+     result
+    });
+
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -149,6 +174,7 @@ export const verifyOtp = async (req, res) => {
 
 export const updatePassword = async (req, res) => {
   const { password, confirmPassword } = req.body;
+  const authHeader = req.headers.authorization;
 
   try {
     // Validate input presence
@@ -176,13 +202,24 @@ export const updatePassword = async (req, res) => {
     }
 
     // Verify authentication token
-    const token = req.cookies.passToken;
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Authorization token required",
-      });
-    }
+    // if (!authHeader?.startsWith("Bearer ")) {
+    //   return res
+    //     .status(401)
+    //     .json({ message: "Authorization token required" });
+    // }
+    // const token = authHeader.split(' ')[1];
+    // if (!token) {
+    //   return res.status(401).json({ 
+    //     success: false,
+    //     message: "Malformed authorization token" 
+    //   });
+    // }
+    // if (!token) {
+    //   return res.status(401).json({
+    //     success: false,
+    //     message: "Authorization token required",
+    //   });
+    // }
 
     // Verify and decode token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -215,8 +252,7 @@ export const updatePassword = async (req, res) => {
     user.password = await bcrypt.hash(password, salt);
     await user.save();
 
-    // Clear password reset cookie
-    res.clearCookie("passToken");
+    // Clear password reset token
 
     return res.status(200).json({
       success: true,

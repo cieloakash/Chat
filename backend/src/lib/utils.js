@@ -8,16 +8,16 @@ export const generateJWToken=(userId,res)=>{
         expiresIn:"24hr"
     });
 
-    res.cookie("jwtoken",token,{
-        maxAge: 24*60*60*1000, //ms
-        httpOnly:true, 
-        sameSite: "strict", 
-        secure:process.env.NODE_ENV !== "development" ,
-    })
+    // res.cookie("jwtoken",token,{
+    //     maxAge: 24*60*60*1000, //ms
+    //     httpOnly:true, 
+    //     sameSite: "strict", 
+    //     secure:process.env.NODE_ENV !== "development" ,
+    // })
     return token
 }
 
-export const generateForgetPasswordToken=async(email,res)=>{
+export const generateForgetPasswordToken=async(email)=>{
     // const user = await User.findById({userId})
     const randomString = crypto.randomBytes(16).toString("hex");
     await PasswordUpdate.create({
@@ -28,12 +28,12 @@ export const generateForgetPasswordToken=async(email,res)=>{
         expiresIn:"5m"
     });
 
-    res.cookie("passToken",token,{
-        maxAge: 5*60*1000, 
-        httpOnly:true, 
-        sameSite: "strict", 
-        secure:process.env.NODE_ENV !== "development" ,
-    })
+    // res.cookie("passToken",token,{
+    //     maxAge: 5*60*1000, 
+    //     httpOnly:true, 
+    //     sameSite: "strict", 
+    //     secure:process.env.NODE_ENV !== "development" ,
+    // })
 
     return token
 }

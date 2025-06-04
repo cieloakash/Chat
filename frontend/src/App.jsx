@@ -1,10 +1,9 @@
 import { useEffect } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
-
+import Navbar from './components/Navbar'
 import ProfilePage from "./pages/ProfilePage";
 import { userAuthStore } from "./store/userAuthStore";
 import { Loader } from "lucide-react";
@@ -14,8 +13,10 @@ import SettingPage from "./pages/SettingPage";
 import ForgotPass from "./pages/ForgotPass";
 import PageNotFound from "./pages/PageNotFound";
 
+
 function App() {
-  const { checkUrl, authUser, isCheckingAuth } = userAuthStore();
+  const { checkUrl, isCheckingAuth } = userAuthStore();
+  const authUser = userAuthStore(state => state.authUser);
 const {theme} = useThemeStore()
 
   useEffect(() => {
@@ -31,11 +32,15 @@ const {theme} = useThemeStore()
     );
   }
 
+
+  console.log(authUser);
   
+
+   
 
   return (
     <div data-theme={theme} >
-      <Navbar />
+      <Navbar/>
       <Routes>
         <Route
           path="/"
@@ -70,7 +75,9 @@ const {theme} = useThemeStore()
       </Routes>
       <Toaster/>
     </div>
-  );
+
+
+  )
 }
 
 export default App;
