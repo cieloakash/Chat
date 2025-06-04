@@ -40,7 +40,6 @@ const ChatContainer = () => {
       </div>
     );
   }
-  console.log(message);
   
 
   return (
